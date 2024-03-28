@@ -1,0 +1,96 @@
+Solenoid Coil specs:
+Description : 1/4inch DC 12V 2 Way Normally Closed Pneumatic Aluminum Electric Solenoid Air ValveWIC Valve 2ACK series 2-way normally closed solenoid valve is to control On/Off of air and inert gas. This solenoid valve has one 1/4" inch NPT inlet and one 1/4" inch NPT outlet port. Valve stays close when the coil is de-energized, and it opens when energized. Has two holes in the bottom and can be mounted in any position. Comes with a ED 100% encapsulated coil which suitable to operate in continuous service and constant energized. 2ACK Series valve is a Zero differential solenoid valve which can be operated at 0 PSI (Vacuum). WIC Valve is compatible with SMC valves.
+Valve Type : 2 Way Normally Closed (Valve opens with energized) 
+Operation Model : Direct Acting 
+Flow Model : Uni-Directional Flow Rate : 0.23Cv (Fluid Flow), 22 SCFM at 100 PSI (Air Flow) 
+Response Time : Less than 20 ms
+Body Material : Anodized Aluminum Seal Material : NBR (Buna N) Armature Tube Material : Brass Plunger & Spring 
+Coil Voltage : 12V DC 
+Coil Power : 6.5W  1.8461 Amps
+Coil Duty : 100% ED (Continuous Duty)
+Operating Pressure : Vacuum to 115 PSI
+Operating Temperature : -5 to 80 °C 
+Port Size : 1/4" Inch NPT Female Port 
+
+
+HV Coil:
+3-6V
+
+
+Pipe diam:
+
+switch diam:
+
+connector for:
+- (WHITE) PIN 4 (D4) mode switch SelectButtonPin
+- (GREEN) PIN 2 (D2)  trigger switch  TriggerButtonPin 
+- (BLUE)  PIN A6 (A6) solenoid potentiometer Solenoid_Input_Pin 
+- (RED) +5V
+- (BLACK )GND
+
+
+#define Solenoid_Input_Pin  A6   // (A6) (INPUT)Analog input pin to read 10K pot value. This is scaled to output a PWM value on pin 6/(D9)
+#define TriggerButtonPin  2    // (D2) (INPUT)the pin number of the trigger button
+#define SelectButtonPin  4    // (D4) (INPUT)the pin number of the select button
+#define SolenoidPin  5    // (D5)/PWM (OUTPUT)the pin number of the gas solenoid valve driver
+#define IgnitionPin  6    // (D6) (OUTPUT)the pin number of the ignition coil driver - maybe PWM?
+#define ModeLEDPinR  9      // (D9) (OUTPUT) RED - Single Burst
+#define ModeLEDPinG  10      // (D10) (OUTPUT) GREEN - Continous Burst
+#define ModeLEDPinB  11      // (D11) (OUTPUT) BLUE - Continous Flame
+
+Connectors for:
+- (GREY)  solenoid signal PIN 5 (D5) 
+- (WHITE) 5V - not connected
+- (BLACK) GND 
+
+
+- (BROWN) igntion coil PIN 6 (D6)
+- (YELLOW) 5V - not connected 
+- (BLACK) GND 
+
+
+RGB LED:
+ORANGE  - RED   PIN 9 D9 
+BLUE    - GREEN PIN 10 D10 
+WHITE   - BLUE  PIN 11 D11 
+RED     - GND, 
+
+
+
+Shape of solenoid burst:
+So, this funny graph deserves some explanation:
+The solenoid *kinda can be PWM controlled with values from 0->255 from the Arduino 8-bit DAC
+It requires an initial high PWM value (near full val of 220 - 255) to initially open the valve.
+After the valve is opened (B), the PWM can be scaled back to a lower value (C) and still be held partially open 
+It can then be ramped up to the desired value from ( C->D ) which is the Max value used for this burst.
+The time period from C->D is ramping up the butane flow based on the acceleration of the gas to allow a slow start for ignition.
+The time period from A->C (eInitialOpen) can probably be fairly short (20mS - 25mS according to specs of the solenoid response time)
+The solenoid PWM value is then held at level D/E until the burst period is over and then dropped down to 0 (F)
+
+PWM 
+255
+		 B_ 
+		 | |
+		 | |   D________E
+		 | |  /         |
+		 | | /          |
+		 | |/           |
+		 | C            |
+		 |              |
+	-----A              F---------
+0
+TIME ---------->
+
+
+Another potential control method of the gas is simply a slower PWM of the solenoid since this is more reliable than 
+controlling the position of the valve By choosing the on/off times of a slower-rate PWM. We've got to determine the maximum practical speed
+that we can reliably open and close the solenoid valve. 
+
+We're trying to also achieve fast (100 ms +) flame bursts
+
+So:
+The specs of the solenoid say 15-25ms , 
+To test the max speed of this, I can disable the ignitor, and use only the solenoid valve
+I can make the speed of the 50/50 on /off time be controlled by the pot.
+
+
